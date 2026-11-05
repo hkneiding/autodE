@@ -1,5 +1,6 @@
 from typing import Optional, TYPE_CHECKING
 
+from autode.wrappers.ASE import ASE
 from autode.wrappers.G09 import G09
 from autode.wrappers.G16 import G16
 from autode.wrappers.NWChem import NWChem
@@ -21,8 +22,8 @@ DFT/WF theory calculations, low level methods are, for example, xtb and mopac
 which are fast non ab-initio methods
 """
 
-high_level_method_names = ["orca", "g09", "g16", "nwchem", "qchem"]
-low_level_method_names = ["xtb", "mopac"]
+high_level_method_names = ["orca", "g09", "g16", "nwchem", "qchem", "ase"]
+low_level_method_names = ["xtb", "mopac", "ase"]
 
 
 def method_or_default_lmethod(method: Optional["Method"]) -> "Method":
@@ -71,7 +72,14 @@ def get_hmethod() -> "Method":
         (Method): High-level method
     """
 
-    h_methods = [ORCA(), G09(), NWChem(), G16(), QChem()]
+    h_methods = [
+        ORCA(),
+        G09(),
+        NWChem(),
+        G16(),
+        QChem(),
+        ASE(calculator_factory=Config.ASE.h_calculator_factory),
+    ]
 
     if Config.hcode is not None:
         return get_defined_method(name=Config.hcode, possibilities=h_methods)
@@ -86,7 +94,16 @@ def get_lmethod() -> "Method":
         (Method): Low-level method
     """
 
-    all_methods = [XTB(), MOPAC(), ORCA(), G16(), G09(), NWChem(), QChem()]
+    all_methods = [
+        XTB(),
+        MOPAC(),
+        ASE(calculator_factory=Config.ASE.l_calculator_factory),
+        ORCA(),
+        G16(),
+        G09(),
+        NWChem(),
+        QChem(),
+    ]
 
     if Config.lcode is not None:
         return get_defined_method(name=Config.lcode, possibilities=all_methods)

@@ -4,7 +4,11 @@ import autode.wrappers.methods
 from typing import Callable, List, Optional, TYPE_CHECKING
 
 from autode.calculations.types import CalculationType as ct
-from autode.exceptions import CalculationException, CouldNotGetProperty
+from autode.exceptions import (
+    CalculationException,
+    CouldNotGetProperty,
+    MethodUnavailable,
+)
 from autode.values import Gradient, PotentialEnergy
 from autode.wrappers.keywords import GradientKeywords, KeywordsSet
 
@@ -33,7 +37,7 @@ class ASE(autode.wrappers.methods.Method):
 
     def __init__(
         self,
-        calculator_factory: Callable[[], "ASECalculator"],
+        calculator_factory: Optional[Callable[[], "ASECalculator"]] = None,
         name: str = "ase",
         doi_list: Optional[List[str]] = None,
     ):
@@ -47,7 +51,12 @@ class ASE(autode.wrappers.methods.Method):
                                  separate worker processes (e.g. for a
                                  numerical Hessian) and many ASE calculators
                                  (e.g. ones backed by a torch model) are not
-                                 safe to share across processes.
+                                 safe to share across processes. Unset
+                                 (None) by default, e.g. when this method is
+                                 constructed by get_hmethod()/get_lmethod()
+                                 before Config.ASE.h/l_calculator_factory
+                                 has been set; is_available is False and
+                                 execute() raises until one is provided.
 
             name: Name of this method
 
@@ -73,6 +82,9 @@ class ASE(autode.wrappers.methods.Method):
 
     @property
     def is_available(self) -> bool:
+        if self._calculator_factory is None:
+            return False
+
         try:
             import ase  # noqa: F401
         except ImportError:
@@ -106,6 +118,13 @@ class ASE(autode.wrappers.methods.Method):
         calc.molecule directly using the wrapped ASE calculator, setting
         the properties on calc.molecule in place
         """
+        if self._calculator_factory is None:
+            raise MethodUnavailable(
+                "ASE has no calculator_factory set. Either construct ASE("
+                "calculator_factory=...) directly, or set "
+                "Config.ASE.l_calculator_factory/h_calculator_factory"
+            )
+
         atoms = self._ase_atoms_from(calc.molecule)
         atoms.calc = self._calculator_factory()
 

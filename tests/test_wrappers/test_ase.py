@@ -9,7 +9,11 @@ from ase.calculators.emt import EMT
 from autode.atoms import Atom
 from autode.calculations import Calculation
 from autode.calculations.types import CalculationType
-from autode.exceptions import CalculationException, CouldNotGetProperty
+from autode.exceptions import (
+    CalculationException,
+    CouldNotGetProperty,
+    MethodUnavailable,
+)
 from autode.species.molecule import Molecule
 from autode.wrappers.ASE import ASE
 from autode.wrappers.keywords import GradientKeywords, SinglePointKeywords
@@ -74,6 +78,25 @@ def test_is_available(monkeypatch):
 
     monkeypatch.setitem(sys.modules, "ase", None)
     assert not method.is_available
+
+
+def test_is_available_without_calculator_factory():
+    assert not ASE().is_available
+
+
+def test_execute_without_calculator_factory_raises():
+    mol = cu2()
+    unconfigured_method = ASE()
+
+    calc = Calculation(
+        name="sp",
+        molecule=mol,
+        method=unconfigured_method,
+        keywords=SinglePointKeywords(),
+    )
+
+    with pytest.raises(MethodUnavailable):
+        calc.run()
 
 
 def test_ase_atoms_from_species():

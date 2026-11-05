@@ -368,6 +368,17 @@ class _ConfigClass:
         # Only COSMO implemented
         implicit_solvation_type = solv.cosmo
 
+    class ASE:
+        # ---------------------------------------------------------------------
+        # Parameters for ase                     https://wiki.fysik.dtu.dk/ase/
+        # ---------------------------------------------------------------------
+        #
+        # Zero-argument callables returning a fresh ASE Calculator instance,
+        # used respectively as the low- and high-level method when selected
+        # with Config.lcode/Config.hcode = 'ase'.
+        l_calculator_factory = None
+        h_calculator_factory = None
+
     class QChem:
         # ---------------------------------------------------------------------
         # Parameters for QChem                          https://www.q-chem.com/
