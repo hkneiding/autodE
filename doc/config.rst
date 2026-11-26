@@ -82,6 +82,42 @@ basis set for optimisations:
 
 ------------
 
+ASE / MLIP methods
+*******************
+
+**autodE** can use any ASE-compatible calculator via the ``ASE`` wrapper,
+including machine learning interatomic potentials (e.g. MACE, UMA, CHGNet).
+Set ``lcode`` / ``hcode`` to ``ase`` and specify a factory function (not
+a calculator instance -- a factory is required for multiprocessing safety).
+To use the MACE-MP foundation model as the low-level method:
+
+.. code-block:: python
+
+  >>> from mace.calculators import mace_mp
+  >>> ade.Config.lcode = 'ase'
+  >>> ade.Config.ASE.l_calculator_factory = mace_mp
+
+``mace_mp`` has different model sizes/variants (e.g. ``'small'``,
+``'medium'``, ``'large'``). As the factory must take no arguments, wrap it
+in a ``lambda`` to select one:
+
+.. code-block:: python
+
+  >>> ade.Config.ASE.l_calculator_factory = lambda: mace_mp(model='small')
+
+Similarly, with the high-level method, using the MACE-OMol model:
+
+.. code-block:: python
+
+  >>> from mace.calculators import mace_omol
+  >>> ade.Config.hcode = 'ase'
+  >>> ade.Config.ASE.h_calculator_factory = mace_omol
+
+``l_calculator_factory`` and ``h_calculator_factory`` are set independently,
+so lcode and hcode can use different MLIPs.
+
+------------
+
 Temporary configuration
 **********************
 
