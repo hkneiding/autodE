@@ -78,7 +78,7 @@ def get_hmethod() -> "Method":
         NWChem(),
         G16(),
         QChem(),
-        ASE(calculator_factory=Config.ASE.h_calculator_factory),
+        ASE(role="h"),
     ]
 
     if Config.hcode is not None:
@@ -97,7 +97,7 @@ def get_lmethod() -> "Method":
     all_methods = [
         XTB(),
         MOPAC(),
-        ASE(calculator_factory=Config.ASE.l_calculator_factory),
+        ASE(role="l"),
         ORCA(),
         G16(),
         G09(),

@@ -3,6 +3,7 @@ import autode.wrappers.methods
 
 from typing import Callable, List, Optional, TYPE_CHECKING
 
+from autode.config import Config
 from autode.exceptions import (
     CalculationException,
     CouldNotGetProperty,
@@ -36,6 +37,7 @@ class ASE(autode.wrappers.methods.MethodEG):
     def __init__(
         self,
         calculator_factory: Optional[Callable[[], "ASECalculator"]] = None,
+        role: str = "h",
         name: str = "ase",
         doi_list: Optional[List[str]] = None,
     ):
@@ -48,11 +50,14 @@ class ASE(autode.wrappers.methods.MethodEG):
                 evaluate gradients in separate worker processes (e.g. for
                 a numerical Hessian) and many ASE calculators (e.g. ones
                 backed by a torch model) are not safe to share across
-                processes. Unset (None) by default, e.g. when this method
-                is constructed by get_hmethod()/get_lmethod() before
-                Config.ASE.h/l_calculator_factory has been set;
-                is_available is False and execute() raises until one is
-                provided.
+                processes. If None (the default), falls back to
+                Config.ASE.h_calculator_factory or
+                Config.ASE.l_calculator_factory, depending on role.
+
+            role: Either "h" or "l". Selects which Config.ASE slot
+                (h_calculator_factory or l_calculator_factory) is used as
+                the fallback when calculator_factory is None. Has no
+                effect if calculator_factory is given explicitly.
 
             name: Name of this method
 
@@ -64,7 +69,12 @@ class ASE(autode.wrappers.methods.MethodEG):
             keywords_set=KeywordsSet(),
             doi_list=[] if doi_list is None else doi_list,
         )
-        self._calculator_factory = calculator_factory
+        if calculator_factory is not None:
+            self._calculator_factory = calculator_factory
+        elif role == "l":
+            self._calculator_factory = Config.ASE.l_calculator_factory
+        else:
+            self._calculator_factory = Config.ASE.h_calculator_factory
 
     def __repr__(self):
         return f"ASE(available = {self.is_available})"
