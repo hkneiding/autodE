@@ -97,9 +97,9 @@ To use the MACE-MP foundation model as the low-level method:
   >>> ade.Config.lcode = 'ase'
   >>> ade.Config.ASE.l_calculator_factory = mace_mp
 
-``mace_mp`` has different model sizes/variants (e.g. ``'small'``,
-``'medium'``, ``'large'``). As the factory must take no arguments, wrap it
-in a ``lambda`` to select one:
+Note that ``mace_mp`` has different model sizes/variants (e.g.
+``'small'``, ``'medium'``, ``'large'``). As the factory must take no
+arguments, wrap it in a ``lambda`` to select one:
 
 .. code-block:: python
 

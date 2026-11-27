@@ -143,6 +143,13 @@ class Method(ABC):
         return None
 
 
+class MethodEG(Method, ABC):
+    """Method that implements energy and gradient, but not opt or Hessian"""
+
+    def implements(self, calculation_type: "CalculationType") -> bool:
+        return calculation_type in (ct.energy, ct.gradient)
+
+
 class ExternalMethod(Method, ABC):
     def __init__(
         self,

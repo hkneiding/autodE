@@ -3,6 +3,8 @@ import sys
 import numpy as np
 import pytest
 
+ase = pytest.importorskip("ase")
+
 from ase.calculators.calculator import Calculator, all_changes
 from ase.calculators.emt import EMT
 

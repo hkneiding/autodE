@@ -3,7 +3,6 @@ import autode.wrappers.methods
 
 from typing import Callable, List, Optional, TYPE_CHECKING
 
-from autode.calculations.types import CalculationType as ct
 from autode.exceptions import (
     CalculationException,
     CouldNotGetProperty,
@@ -16,11 +15,10 @@ if TYPE_CHECKING:
     from ase import Atoms as ASEAtoms
     from ase.calculators.calculator import Calculator as ASECalculator
     from autode.calculations.executors import CalculationExecutor
-    from autode.calculations.types import CalculationType
     from autode.species.species import Species
 
 
-class ASE(autode.wrappers.methods.Method):
+class ASE(autode.wrappers.methods.MethodEG):
     """
     An autodE method that evaluates energies/gradients using an ASE
     Calculator. Example::
@@ -45,23 +43,21 @@ class ASE(autode.wrappers.methods.Method):
         -----------------------------------------------------------------------
         Arguments:
             calculator_factory: A zero-argument callable returning a fresh
-                                 ASE Calculator instance. A factory, rather
-                                 than a calculator instance, is required
-                                 because autodE may evaluate gradients in
-                                 separate worker processes (e.g. for a
-                                 numerical Hessian) and many ASE calculators
-                                 (e.g. ones backed by a torch model) are not
-                                 safe to share across processes. Unset
-                                 (None) by default, e.g. when this method is
-                                 constructed by get_hmethod()/get_lmethod()
-                                 before Config.ASE.h/l_calculator_factory
-                                 has been set; is_available is False and
-                                 execute() raises until one is provided.
+                ASE Calculator instance. A factory, rather than a
+                calculator instance, is required because autodE may
+                evaluate gradients in separate worker processes (e.g. for
+                a numerical Hessian) and many ASE calculators (e.g. ones
+                backed by a torch model) are not safe to share across
+                processes. Unset (None) by default, e.g. when this method
+                is constructed by get_hmethod()/get_lmethod() before
+                Config.ASE.h/l_calculator_factory has been set;
+                is_available is False and execute() raises until one is
+                provided.
 
             name: Name of this method
 
-            doi_list: Digital object identifiers for the underlying
-                      potential, for citation purposes
+            doi_list: Digital object identifiers for the underlying potential,
+                for citation purposes
         """
         super().__init__(
             name=name,
@@ -76,9 +72,6 @@ class ASE(autode.wrappers.methods.Method):
     @property
     def uses_external_io(self) -> bool:
         return False
-
-    def implements(self, calculation_type: "CalculationType") -> bool:
-        return calculation_type in (ct.energy, ct.gradient)
 
     @property
     def is_available(self) -> bool:
@@ -138,7 +131,7 @@ class ASE(autode.wrappers.methods.Method):
 
         calc.molecule.energy = PotentialEnergy(
             energy, units="eV", method=self, keywords=calc.input.keywords
-        )
+        ).to("Ha")
 
         if isinstance(calc.input.keywords, GradientKeywords):
             try:
@@ -146,7 +139,9 @@ class ASE(autode.wrappers.methods.Method):
             except Exception as exc:
                 raise CouldNotGetProperty(name="gradient") from exc
 
-            calc.molecule.gradient = Gradient(-forces, units="eV Å^-1")
+            calc.molecule.gradient = Gradient(-forces, units="eV Å^-1").to(
+                "Ha Å^-1"
+            )
 
         return None
 
